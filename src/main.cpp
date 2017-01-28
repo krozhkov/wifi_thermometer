@@ -1,78 +1,46 @@
 #include <Arduino.h>
-#include "SPI.h"
-#include "Adafruit_GFX.h"
-#include "Adafruit_ILI9341.h"
-#include "win.h"
+#include "LedControl.h"
 
-// For the Adafruit shield, these are the default.
-#define TFT_DC D1
-#define TFT_CS D2
+LedControl lc = LedControl(D3,D1,D2,2);
 
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+unsigned long delaytime=1000;
 
-unsigned long testFillScreen() {
-  unsigned long start = micros();
-  tft.fillScreen(ILI9341_BLACK);
-  yield();
-  tft.fillScreen(ILI9341_RED);
-  yield();
-  tft.fillScreen(ILI9341_GREEN);
-  yield();
-  tft.fillScreen(ILI9341_BLUE);
-  yield();
-  tft.fillScreen(ILI9341_BLACK);
-  yield();
-  return micros() - start;
-}
+static const byte minus[] PROGMEM = {B00000000, B00000000, B00000000, B00000000, B00000111, B00000000, B00000000, B00000000};
+static const byte digits[10][8] = {
+  {B00000000, B00001110, B00010001, B00010011, B00010101, B00011001, B00010001, B00001110},
+  {B00000000, B00000100, B00001100, B00010100, B00000100, B00000100, B00000100, B00011111},
+  {B00000000, B00001110, B00010001, B00010001, B00000110, B00001000, B00010000, B00011111},
+  {B00000000, B00001110, B00010001, B00000001, B00000110, B00000001, B00010001, B00001110},
+  {B00000000, B00010001, B00010001, B00010001, B00001111, B00000001, B00000001, B00000001},
+  {B00000000, B00011111, B00010000, B00010000, B00011110, B00000001, B00000001, B00011110},
+  {B00000000, B00001110, B00010001, B00010000, B00011110, B00010001, B00010001, B00001110},
+  {B00000000, B00011111, B00010001, B00000001, B00000010, B00000010, B00000100, B00000100},
+  {B00000000, B00001110, B00010001, B00010001, B00001110, B00010001, B00010001, B00001110},
+  {B00000000, B00001110, B00010001, B00010001, B00001111, B00000001, B00010001, B00001110}
+};
 
-void drawColorBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h) {
-  int16_t i, j;
-  uint16_t word;
-
-  for(j = 0; j < h; j++) {
-    for(i = 0; i < w; i++) {
-      word = pgm_read_word(bitmap + ((j * w + i) << 1));
-      tft.drawPixel(x + i, y + (h - j), (word >> 8) | (word << 8));
-    }
-    yield();
+void setup() {
+  for (int i = 0; i < lc.getDeviceCount(); i++) {
+    lc.shutdown(i, false);
+    lc.setIntensity(i, 4);
+    lc.clearDisplay(i);
   }
 }
 
-void setup() {
-  Serial.begin(9600);
-  Serial.println("ILI9341 Test!");
-
-  tft.begin();
-
-  // read diagnostics (optional but can help debug problems)
-  uint8_t x = tft.readcommand8(ILI9341_RDMODE);
-  Serial.print("Display Power Mode: 0x"); Serial.println(x, HEX);
-  x = tft.readcommand8(ILI9341_RDMADCTL);
-  Serial.print("MADCTL Mode: 0x"); Serial.println(x, HEX);
-  x = tft.readcommand8(ILI9341_RDPIXFMT);
-  Serial.print("Pixel Format: 0x"); Serial.println(x, HEX);
-  x = tft.readcommand8(ILI9341_RDIMGFMT);
-  Serial.print("Image Format: 0x"); Serial.println(x, HEX);
-  x = tft.readcommand8(ILI9341_RDSELFDIAG);
-  Serial.print("Self Diagnostic: 0x"); Serial.println(x, HEX);
-
-  Serial.println(F("Benchmark                Time (microseconds)"));
-
-  tft.setRotation(1);
-  tft.fillScreen(ILI9341_BLACK);
-  drawColorBitmap(0, 0, win_bits, win_width, win_height);
-
-  //yield();
-  //tft.drawPixel(0, 0, ILI9341_RED);
-  //tft.drawPixel(200, 100, ILI9341_RED);
-  //tft.drawPixel(319, 239, ILI9341_GREEN);
+void writeArduinoOnMatrix() {
+  for (int num = 0; num < 10; num++) {
+    lc.setRow(0,0,digits[num][0]);
+    lc.setRow(0,1,digits[num][1]);
+    lc.setRow(0,2,digits[num][2]);
+    lc.setRow(0,3,digits[num][3]);
+    lc.setRow(0,4,digits[num][4]);
+    lc.setRow(0,5,digits[num][5]);
+    lc.setRow(0,6,digits[num][6]);
+    lc.setRow(0,7,digits[num][7]);
+    delay(delaytime);
+  }
 }
 
-
-void loop(void) {
-  /*for(uint8_t rotation=0; rotation<4; rotation++) {
-    tft.setRotation(rotation);
-    testText();
-    delay(1000);
-  }*/
+void loop() {
+  writeArduinoOnMatrix();
 }
