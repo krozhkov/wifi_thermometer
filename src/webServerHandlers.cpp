@@ -3,7 +3,10 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include "webServerHandlers.hpp"
+#include "settings.hpp"
 #include "debug.h"
+using namespace std;
+using namespace settings;
 
 namespace web {
   ESP8266WebServer server;
@@ -23,13 +26,12 @@ namespace web {
   void handleSave() {
     debug("[handleSave] enter.\n");
 
-    // TODO
-    /*for(vector<String>::size_type i = 0; i != optionNames.size(); i++) {
+    for (vector<String>::size_type i = 0; i != optionNames.size(); i++) {
       if (server.hasArg(optionNames[i].c_str())) {
         debug("[handleSave] %s is %s\n", optionNames[i].c_str(), server.arg(optionNames[i].c_str()).c_str());
         applySetting(optionNames[i], server.arg(optionNames[i].c_str()));
       }
-    }*/
+    }
 
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     server.sendHeader("Pragma", "no-cache");
@@ -50,11 +52,11 @@ namespace web {
     debug("[handleSave] close file.\n");
     f.close();
 
-    //writeConfig(); // TODO:
+    writeConfig();
   }
 
   void redirectToIndex(){
-    server.sendHeader("Location", String("http://") + serverName + String("/index.htm"), true); // TODO: + getQueryString(), true);
+    server.sendHeader("Location", String("http://") + serverName + String("/index.htm") + getQueryString(), true);
     server.send ( 302, "text/plain", ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
     server.client().stop(); // Stop is needed because we sent no content length
   }

@@ -5,13 +5,13 @@
 #include <ESP8266WebServer.h>
 #include "LedControl.h"
 #include "webServerHandlers.hpp"
+#include "settings.hpp"
 #include "debug.h"
 using namespace web;
+using namespace settings;
 
 LedControl lc = LedControl(D3, D1, D2, 2);
 
-const char* ssid     = "arbuz";
-const char* password = "arbuz321";
 const char* tempHost = "weather.nsu.ru";
 const int httpPort = 80;
 const char* tempPath = "/weather_brief.xml";
@@ -198,6 +198,16 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
 
+  // read config file
+  debug("read config.\n ");
+  readConfig();
+  debug("validate config.\n ");
+  if (!isSettingsValid()) {
+    reset_counter(0);
+    mSpecialMode = 1;
+    debug("config file is invalid.\n ");
+  }
+
   if(mSpecialMode) {
     debug("special mode.\n");
     WiFi.mode(WIFI_AP);
@@ -209,7 +219,7 @@ void setup() {
     debug("normal mode.\n");
     while (true) {
       debug("Attempting to connect to wifi.\n");
-      WiFi.begin(ssid, password);
+      WiFi.begin();
       if (WiFi.waitForConnectResult() == WL_CONNECTED) {
         break;
       }
