@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<title>Config page</title>
+	<style type="text/css">
+		@-ms-viewport       { width: device-width; }
+	</style>
+	<link href="/bootstrap.min.css" rel="stylesheet">
+	<link href="/bootstrap-theme.min.css" rel="stylesheet">
+	<script type="text/javascript">
+		// Copyright 2014-2015 Twitter, Inc.
+		// Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+		if (navigator.userAgent.match(/IEMobile\/10\.0/)) {
+		  var msViewportStyle = document.createElement('style')
+		  msViewportStyle.appendChild(
+		    document.createTextNode(
+		      '@-ms-viewport{width:auto!important}'
+		    )
+		  )
+		  document.querySelector('head').appendChild(msViewportStyle)
+		}
+
+		function parseUrl() {
+	        var sPageURL = window.location.search.substring(1);
+	        var sURLVariables = sPageURL.split('&');
+	        var query = Object.create(null);
+	        for (var i = 0; i < sURLVariables.length; i++) {
+	        	if (!!sURLVariables[i]) {
+		            var sParameter = sURLVariables[i].split('=');
+		            query[sParameter[0]] = decodeURIComponent(sParameter[1]);
+		        }
+	        }
+	        return query;
+	    }
+	</script>
+</head>
+<body>
+	<div class="container">
+		<h1>Config page</h1>
+		<form role="form" action="/save" method="post">
+		  <div class="form-group">
+		    <label for="ssid">SSID:</label>
+		    <input type="text" class="form-control" id="ssid" name="ssid">
+		  </div>
+		  <div class="form-group">
+		    <label for="password">Password (for SSID):</label>
+		    <input type="text" class="form-control" id="password" name="password">
+		  </div>
+		  <button type="submit" class="btn btn-primary">Save</button>
+		</form>
+	</div>
+	<script type="text/javascript">
+		var query = parseUrl();
+	    for (var prop in query) {
+	    	var input = document.getElementById(prop);
+	    	if (!!input) {
+	    		input.value = query[prop];
+	    	}
+	    }
+	</script>
+</body>
+</html>
