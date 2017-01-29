@@ -3,7 +3,7 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include "LedControl.h"
-#include "dhdebug.h"
+#include "debug.h"
 
 LedControl lc = LedControl(D3, D1, D2, 2);
 
@@ -48,7 +48,7 @@ LOCAL os_timer_t mResetTimer;
 LOCAL unsigned int mSpecialMode = 0;
 
 LOCAL void ICACHE_FLASH_ATTR reset_counter(void *arg) {
-  dhdebug("[reset_counter]\n");
+  debug("[reset_counter]\n");
   RESET_COUNTER counter;
   counter.magic = RESET_COUNTER_MAGIC;
   counter.resetCounter = 0;
@@ -60,20 +60,20 @@ void run_user_rf_pre_init(void) {
   system_rtc_mem_read(RESET_COUNTER_RTC_ADDRESS, &counter, sizeof(counter));
   if(counter.magic == RESET_COUNTER_MAGIC && counter.resetCounter <= RESET_NUM) {
     counter.resetCounter++;
-    dhdebug("[run_user_rf_pre_init] resetCounter == %d.\n.", counter.resetCounter);
+    debug("[run_user_rf_pre_init] resetCounter == %d.\n.", counter.resetCounter);
     if(counter.resetCounter == RESET_NUM) {
-      dhdebug("[run_user_rf_pre_init] set special mode.\n");
+      debug("[run_user_rf_pre_init] set special mode.\n");
       reset_counter(0);
       mSpecialMode = 1;
     } else {
-      dhdebug("[run_user_rf_pre_init] setup timer.\n");
+      debug("[run_user_rf_pre_init] setup timer.\n");
       system_rtc_mem_write(RESET_COUNTER_RTC_ADDRESS, &counter, sizeof(counter));
       os_timer_disarm(&mResetTimer);
       os_timer_setfn(&mResetTimer, (os_timer_func_t *)reset_counter, NULL);
       os_timer_arm(&mResetTimer, 3000, 0);
     }
   } else {
-    dhdebug("[run_user_rf_pre_init] reset counter.\n");
+    debug("[run_user_rf_pre_init] reset counter.\n");
     reset_counter(0);
   }
 
@@ -122,7 +122,7 @@ void flushBuffer() {
 
 void dumpBuffer() {
   for (int i = 0; i < 8; i++) {
-    Serial.println(String(buffer[i], BIN));
+    debug("%s\n", String(buffer[i], BIN).c_str());
   }
 }
 
@@ -196,23 +196,23 @@ void setup() {
   WiFi.mode(WIFI_STA);
 
   if(mSpecialMode) {
-    dhdebug("special mode.\n");
+    debug("special mode.\n");
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(apIP, apIP, netMask);
     WiFi.softAP(apName);
     //initWebServer();
     drawSpecialMode();
   } else {
-    dhdebug("normal mode.\n");
+    debug("normal mode.\n");
     while (true) {
-      Serial.println("Attempting to connect to wifi.\n");
+      debug("Attempting to connect to wifi.\n");
       WiFi.begin(ssid, password);
       if (WiFi.waitForConnectResult() == WL_CONNECTED) {
         break;
       }
       delay(10000);
     }
-    dhdebug("Connected.\n");
+    debug("Connected.\n");
   }
 }
 
@@ -228,11 +228,11 @@ void loop() {
         if(httpCode == 200) {
             String payload = http.getString();
             String temp = parseTemp(payload);
-            Serial.println(temp);
+            debug("%s\n", temp.c_str());
             drawTemp(temp);
         }
     } else {
-        Serial.print("[HTTP] GET... failed, no connection or no HTTP server\n");
+        debug("[HTTP] GET... failed, no connection or no HTTP server\n");
     }
 
     delay(60000);
