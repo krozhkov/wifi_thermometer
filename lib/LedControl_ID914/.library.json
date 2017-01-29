@@ -1,0 +1,46 @@
+{
+    "description": "A library for the MAX7219 and the MAX7221 Led display drivers.", 
+    "repository": {
+        "url": "https://github.com/wayoda/LedControl", 
+        "type": "git"
+    }, 
+    "platforms": [
+        "atmelavr", 
+        "atmelsam", 
+        "espressif8266", 
+        "intel_arc32", 
+        "microchippic32", 
+        "nordicnrf51", 
+        "teensy", 
+        "timsp430"
+    ], 
+    "export": {
+        "exclude": [
+            "extras", 
+            "docs", 
+            "tests", 
+            "test", 
+            "*.doxyfile", 
+            "*.pdf"
+        ], 
+        "include": null
+    }, 
+    "authors": [
+        {
+            "maintainer": true, 
+            "name": "Eberhard Fahle", 
+            "url": null, 
+            "email": "e.fahle@wayoda.org"
+        }
+    ], 
+    "keywords": [
+        "display"
+    ], 
+    "id": 914, 
+    "name": "LedControl", 
+    "frameworks": [
+        "arduino"
+    ], 
+    "version": "1.0.6", 
+    "homepage": "http://wayoda.github.io/LedControl/"
+}
