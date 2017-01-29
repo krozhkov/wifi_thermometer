@@ -1,9 +1,15 @@
 #include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 #include "LedControl.h"
 
 LedControl lc = LedControl(D3, D1, D2, 2);
 
-unsigned long delaytime = 1000;
+const char* ssid     = "arbuz";
+const char* password = "arbuz321";
+const char* tempHost = "weather.nsu.ru";
+const int httpPort = 80;
+const char* tempPath = "/weather_brief.xml";
 
 static const unsigned char minus[] = {B00000000, B00000000, B00000000, B00000000, B00000111, B00000000, B00000000, B00000000};
 static const unsigned char digits[10][8] = {
@@ -49,6 +55,10 @@ void dumpBuffer() {
 }
 
 void writeDigit(int num) {
+  if (num < 0 || num > 9) {
+    return;
+  }
+
   shiftBuffer(6);
   for (int i = 0; i < 8; i++) {
     buffer[i] = buffer[i] | digits[num][i];
@@ -62,21 +72,71 @@ void writeMinus() {
   }
 }
 
+String parseTemp(String xml) {
+  int start = xml.indexOf("<current>");
+  int end = xml.indexOf("</current>");
+  String temp = xml.substring(start + 9, end); // 9 - size of <current> string
+  int dotPos = temp.indexOf(".");
+  return temp.substring(0, dotPos);
+}
+
+void drawTemp(String temp) {
+  clearBuffer();
+  int length = temp.length();
+  for (int i = 0; i < length; i++) {
+    char chr = temp.charAt(i);
+    switch (chr) {
+      case '-':
+        writeMinus();
+        break;
+      case '+':
+        break;
+      default:
+        int num = chr - '0';
+        writeDigit(num);
+        break;
+    }
+  }
+  shiftBuffer(1);
+  flushBuffer();
+}
+
 void setup() {
   Serial.begin(9600);
   Serial.println();
+
   for (int i = 0; i < lc.getDeviceCount(); i++) {
     lc.shutdown(i, false);
     lc.setIntensity(i, 2);
     lc.clearDisplay(i);
   }
-  clearBuffer();
-  writeMinus();
-  writeDigit(2);
-  writeDigit(5);
-  shiftBuffer(1);
-  flushBuffer();
+
+  WiFi.mode(WIFI_STA);
+  while (true) {
+    Serial.println("Attempting to connect to wifi.\n");
+    WiFi.begin(ssid, password);
+    if (WiFi.waitForConnectResult() == WL_CONNECTED) {
+      break;
+    }
+    delay(10000);
+  }
 }
 
 void loop() {
+  HTTPClient http;
+  http.begin(tempHost, httpPort, tempPath);
+
+  int httpCode = http.GET();
+  if(httpCode) {
+      if(httpCode == 200) {
+          String payload = http.getString();
+          String temp = parseTemp(payload);
+          Serial.println(temp);
+          drawTemp(temp);
+      }
+  } else {
+      Serial.print("[HTTP] GET... failed, no connection or no HTTP server\n");
+  }
+
+  delay(60000);
 }
