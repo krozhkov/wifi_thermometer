@@ -1,9 +1,12 @@
 #include <Arduino.h>
+#include <FS.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include "LedControl.h"
+#include "webServerHandlers.hpp"
 #include "debug.h"
+using namespace web;
 
 LedControl lc = LedControl(D3, D1, D2, 2);
 
@@ -15,7 +18,6 @@ const char* tempPath = "/weather_brief.xml";
 
 IPAddress apIP(192, 168, 2, 1);
 IPAddress netMask(255, 255, 255, 0);
-ESP8266WebServer server;
 const char *apName = "termometr-device";
 
 #ifdef __cplusplus
@@ -186,6 +188,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println();
   run_user_rf_pre_init();
+  SPIFFS.begin();
 
   for (int i = 0; i < lc.getDeviceCount(); i++) {
     lc.shutdown(i, false);
@@ -200,7 +203,7 @@ void setup() {
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(apIP, apIP, netMask);
     WiFi.softAP(apName);
-    //initWebServer();
+    initWebServer();
     drawSpecialMode();
   } else {
     debug("normal mode.\n");
@@ -218,7 +221,7 @@ void setup() {
 
 void loop() {
   if (mSpecialMode) {
-    //server.handleClient();
+    server.handleClient();
   } else {
     HTTPClient http;
     http.begin(tempHost, httpPort, tempPath);
