@@ -10,7 +10,7 @@
 using namespace web;
 using namespace settings;
 
-LedControl lc = LedControl(D3, D1, D2, 2);
+LedControl lc = LedControl(0, 2, 12, 2);
 
 const char* tempHost = "weather.nsu.ru";
 const int httpPort = 80;
@@ -208,6 +208,26 @@ void setup() {
     debug("config file is invalid.\n ");
   }
 
+  if (!mSpecialMode) {
+    debug("normal mode.\n");
+    boolean connected = false;
+    for (int i = 0; i < 3; i++) {
+      debug("Attempting to connect to wifi.\n");
+      WiFi.begin();
+      if (WiFi.waitForConnectResult() == WL_CONNECTED) {
+        connected = true;
+        break;
+      }
+      delay(10000);
+    }
+
+    if (connected) {
+      debug("Connected.\n");
+    } else {
+      mSpecialMode = 1;
+    }
+  }
+
   if(mSpecialMode) {
     debug("special mode.\n");
     WiFi.mode(WIFI_AP);
@@ -215,17 +235,6 @@ void setup() {
     WiFi.softAP(apName);
     initWebServer();
     drawSpecialMode();
-  } else {
-    debug("normal mode.\n");
-    while (true) {
-      debug("Attempting to connect to wifi.\n");
-      WiFi.begin();
-      if (WiFi.waitForConnectResult() == WL_CONNECTED) {
-        break;
-      }
-      delay(10000);
-    }
-    debug("Connected.\n");
   }
 }
 
